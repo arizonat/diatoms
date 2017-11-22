@@ -62,18 +62,30 @@ to wander   ;; turtle procedure
   fd 1
 end
 
-
+to save
+  ;; use file-write just for easy file-read, though it's not a very robust file format
+  file-open "patches.txt"
+  file-write radius
+  ask patches
+  [
+    if pcolor = green
+    [
+      file-write pxcor file-write pycor
+    ]
+  ]
+  file-close
+end
 ; Copyright 1997 Uri Wilensky.
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
 608
 35
-1066
-494
+1217
+645
 -1
 -1
-0.75
+1.5
 1
 10
 1
@@ -83,10 +95,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--300
-300
--300
-300
+-200
+200
+-200
+200
 1
 1
 1
@@ -128,7 +140,7 @@ wiggle-angle
 wiggle-angle
 0
 360
-232.0
+8.0
 1
 1
 NIL
@@ -167,6 +179,23 @@ NIL
 NIL
 NIL
 0
+
+BUTTON
+233
+43
+296
+76
+NIL
+save
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
