@@ -44,6 +44,9 @@ to make-new-turtle
     [ set color red
       set size 3  ;; easier to see
       setxy 0 0
+      ifelse radius > 20
+      [      set heading one-of [0 36 72 108 144 180 216 252 288 324]]
+      [      set heading one-of [20 56 92 128 164 200 236 272 308 344]]
       ifelse use-whole-world?
         [ jump max-pxcor ]
         [ jump radius + 1.5 ]
@@ -64,13 +67,13 @@ end
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-739
-68
-1089
-419
+608
+35
+1066
+494
 -1
 -1
-2.0
+0.75
 1
 10
 1
@@ -80,10 +83,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--85
-85
--85
-85
+-300
+300
+-300
+300
 1
 1
 1
@@ -98,8 +101,8 @@ SLIDER
 max-particles
 max-particles
 0
-100
-100.0
+300
+256.0
 1
 1
 NIL
@@ -124,8 +127,8 @@ SLIDER
 wiggle-angle
 wiggle-angle
 0
-100
-8.0
+360
+232.0
 1
 1
 NIL
