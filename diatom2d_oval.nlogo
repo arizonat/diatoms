@@ -1,8 +1,10 @@
 globals [
-  radius   ;; distance of the farthest green patch from the center
+  ;; distance of the farthest green patch from the center
+  radius
   sdv_a
   sdv_b
   stv_ang
+  all_angs
 ]
 
 to setup
@@ -22,8 +24,9 @@ to setup-sdv
   let sa sdv_a / 2
   let sb sdv_b / 2
 
-  foreach stv_ang [ang ->
-    let rad (sa * sb) / sqrt ((sa * cos ang) ^ 2 + (sb * sin ang) ^ 2)
+  foreach all_angs [ang ->
+    ;;let rad (sa * sb) / sqrt ((sa * cos ang) ^ 2 + (sb * sin ang) ^ 2)
+    let rad ellipse-rad sa sb ang
     let ep_x rad * cos(ang)
     let ep_y rad * sin(ang)
     ask patch ep_x ep_y [set pcolor magenta]
@@ -35,12 +38,25 @@ to setup-epitheca
   let ea ep_a / 2
   let eb ep_b / 2
 
-  foreach stv_ang [ang ->
-    let rad (ea * eb) / sqrt ((ea * cos ang) ^ 2 + (eb * sin ang) ^ 2)
+  foreach all_angs [ang ->
+    ;;let rad (ea * eb) / sqrt ((ea * cos ang) ^ 2 + (eb * sin ang) ^ 2)
+    let rad ellipse-rad ea eb ang
     let ep_x rad * cos(ang)
     let ep_y rad * sin(ang)
     ask patch ep_x ep_y [set pcolor yellow]
   ]
+end
+
+to-report ellipse-rad [a b ang]
+  ;; assumes ellipse centered at origin
+  report (a * b) / sqrt ((a * cos ang) ^ 2 + (b * sin ang) ^ 2)
+end
+
+to-report in-ellipse? [a b x y]
+  ;; TODO make this more efficient
+  let rad sqrt (x ^ 2 + y ^ 2)
+  let ang atan y x
+  report (ellipse-rad a b ang) > rad
 end
 
 to setup-raphe
@@ -50,19 +66,33 @@ to setup-raphe
 end
 
 to setup-stv
-  ;;set stv_ang [0 36 72 108 144 180 216 252 288 324 90 270]
-  set stv_ang []
+  set stv_ang [0 36 72 108 144 180 216 252 288 324 90 270]
+
+  set all_angs []
   let i 0
   repeat 360 [
-    set stv_ang lput i stv_ang
+    set all_angs lput i all_angs
     set i i + 1
   ]
 end
 
 to grow-sdv
-  ;;??????
   set sdv_a sdv_a + 1
   set sdv_b sdv_b + 1
+
+  let sa sdv_a / 2
+  let sb sdv_b / 2
+
+  ask patches with [pcolor = magenta]
+  [set pcolor black]
+
+  foreach all_angs [ang ->
+    ;;let rad (sa * sb) / sqrt ((sa * cos ang) ^ 2 + (sb * sin ang) ^ 2)
+    let rad ellipse-rad sa sb ang
+    let ep_x rad * cos(ang)
+    let ep_y rad * sin(ang)
+    ask patch ep_x ep_y [set pcolor magenta]
+  ]
 end
 
 to go
@@ -83,11 +113,16 @@ to go
       if any? neighbors with [pcolor = green]
         [ set pcolor green
           ;; increase radius if appropriate
-          if distancexy 0 0 > radius
-            [ set radius distancexy 0 0 ]
-          die ]
+          ;;if distancexy 0 0 > radius
+          ;;  [ set radius distancexy 0 0 ]
+          ;;die ]
+          if not in-ellipse? (sdv_a / 2) (sdv_b / 2) xcor ycor
+          [grow-sdv]
+         die
+      ]
       ;; kill turtles that wander too far away from the center
-      if not use-whole-world? and distancexy 0 0 > radius + 3
+      ;;if not use-whole-world? and distancexy 0 0 > radius + 3
+      if not use-whole-world? and not in-ellipse? (ep_a / 2) (ep_b / 2) xcor ycor
         [ die ] ]
 
   ;; advance clock
@@ -101,12 +136,18 @@ to make-new-turtle
     [ set color red
       set size 3  ;; easier to see
       setxy 0 0
-      ifelse radius > 20
-      [      set heading one-of [0 36 72 108 144 180 216 252 288 324]]
-      [      set heading one-of [20 56 92 128 164 200 236 272 308 344]]
+
+      ;;ifelse radius > 20
+      ;;[      set heading one-of [0 36 72 108 144 180 216 252 288 324]]
+      ;;[      set heading one-of [20 56 92 128 164 200 236 272 308 344]]
+
+      set heading one-of stv_ang
+
+      let rad ellipse-rad sdv_a sdv_b heading
+
       ifelse use-whole-world?
         [ jump max-pxcor ]
-        [ jump radius + 1.5 ]
+        [ jump rad ]
       rt 180 ]
 end
 
@@ -263,7 +304,7 @@ raphe_len
 raphe_len
 0
 100
-1.0
+16.0
 1
 1
 NIL
@@ -278,7 +319,7 @@ ep_a
 ep_a
 0
 100
-63.0
+88.0
 1
 1
 NIL
@@ -293,7 +334,7 @@ ep_b
 ep_b
 0
 100
-63.0
+46.0
 1
 1
 NIL
@@ -308,7 +349,7 @@ sdv_raphe_offset
 sdv_raphe_offset
 0
 100
-11.0
+35.0
 1
 1
 NIL
