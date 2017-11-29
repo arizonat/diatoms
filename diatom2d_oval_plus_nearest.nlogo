@@ -24,7 +24,7 @@ to setup-sdv
   let sa sdv_a / 2
   let sb sdv_b / 2
 
-  foreach all_angs [ang ->
+  foreach stv_ang [ang ->
     ;;let rad (sa * sb) / sqrt ((sa * cos ang) ^ 2 + (sb * sin ang) ^ 2)
     let rad ellipse-rad sa sb ang
     let ep_x rad * cos(ang)
@@ -66,10 +66,19 @@ to setup-raphe
 end
 
 to setup-stv
-  set stv_ang [0 36 72 108 144 180 216 252 288 324 90 270]
+  ;;set stv_ang [0 36 72 108 144 180 216 252 288 324 90 270]
+
+  set stv_ang []
+  let ang_inc 360 / num_stv
+  let i 0
+  while [i < 360]
+  [
+    set stv_ang lput i stv_ang
+    set i i + ang_inc
+  ]
 
   set all_angs []
-  let i 0
+  set i 0
   repeat 360 [
     set all_angs lput i all_angs
     set i i + 1
@@ -77,6 +86,10 @@ to setup-stv
 end
 
 to grow-sdv
+
+  if sdv_a = ep_a and sdv_b = ep_b
+  [stop]
+
   set sdv_a sdv_a + 1
   set sdv_b sdv_b + 1
 
@@ -86,7 +99,7 @@ to grow-sdv
   ask patches with [pcolor = magenta]
   [set pcolor black]
 
-  foreach all_angs [ang ->
+  foreach stv_ang [ang ->
     ;;let rad (sa * sb) / sqrt ((sa * cos ang) ^ 2 + (sb * sin ang) ^ 2)
     let rad ellipse-rad sa sb ang
     let ep_x rad * cos(ang)
@@ -116,13 +129,13 @@ to go
           ;;if distancexy 0 0 > radius
           ;;  [ set radius distancexy 0 0 ]
           ;;die ]
-          if not in-ellipse? (sdv_a / 2) (sdv_b / 2) xcor ycor
+          if not in-ellipse? (sdv_a / 2 - 1) (sdv_b / 2 - 1) xcor ycor
           [grow-sdv]
          die
       ]
       ;; kill turtles that wander too far away from the center
       ;;if not use-whole-world? and distancexy 0 0 > radius + 3
-      if not use-whole-world? and not in-ellipse? (ep_a / 2) (ep_b / 2) xcor ycor
+      if not use-whole-world? and not in-ellipse? (ep_a / 2 + 2) (ep_b / 2 + 2) xcor ycor
         [ die ] ]
 
   ;; advance clock
@@ -141,13 +154,15 @@ to make-new-turtle
       ;;[      set heading one-of [0 36 72 108 144 180 216 252 288 324]]
       ;;[      set heading one-of [20 56 92 128 164 200 236 272 308 344]]
 
-      set heading one-of stv_ang
+      let ang one-of stv_ang
+      set heading (ang) + 90
       ;; set heading one-of [22.5 45 67.5 90 112.5 135 157.5 180 202.5 225 247.5 270 292.5 315 337.5 360]
-      let rad ellipse-rad sdv_a sdv_b heading
+      let rad ellipse-rad (sdv_a / 2) (sdv_b / 2) ang
 
       ifelse use-whole-world?
         [ jump max-pxcor ]
         [ jump rad ]
+      ;;face patch 0 0]
       ;;rt 180 ]
       face min-one-of patches with [pcolor = green] [distance myself]]
 end
@@ -213,7 +228,7 @@ max-particles
 max-particles
 0
 300
-256.0
+250.0
 1
 1
 NIL
@@ -305,7 +320,7 @@ raphe_len
 raphe_len
 0
 100
-16.0
+1.0
 1
 1
 NIL
@@ -319,8 +334,8 @@ SLIDER
 ep_a
 ep_a
 0
-100
-88.0
+150
+100.0
 1
 1
 NIL
@@ -334,8 +349,8 @@ SLIDER
 ep_b
 ep_b
 0
-100
-46.0
+150
+100.0
 1
 1
 NIL
@@ -350,7 +365,22 @@ sdv_raphe_offset
 sdv_raphe_offset
 0
 100
-35.0
+11.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+257
+296
+429
+329
+num_stv
+num_stv
+0
+360
+34.0
 1
 1
 NIL
