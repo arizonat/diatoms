@@ -17,9 +17,14 @@ to setup
 end
 
 to setup-sdv
-  set sdv_a raphe_len + sdv_raphe_offset
-  let d ep_a - sdv_a
-  set sdv_b ep_b - d
+  ;;set sdv_a raphe_len + sdv_raphe_offset
+  ;;let d ep_a - sdv_a
+  ;;set sdv_b ep_b - d
+
+  set sdv_a sdv0_a
+  set sdv_b sdv0_b
+
+
 
   let sa sdv_a / 2
   let sb sdv_b / 2
@@ -62,7 +67,7 @@ end
 to setup-raphe
   let len raphe_len / 2
   ask patches with [pxcor = 0 and pycor > -1 * len and pycor < len]
-  [ set pcolor green]
+  [ set pcolor blue]
 end
 
 to setup-stv
@@ -90,8 +95,11 @@ to grow-sdv
   if sdv_a = ep_a and sdv_b = ep_b
   [stop]
 
-  set sdv_a sdv_a + 1
-  set sdv_b sdv_b + 1
+  if sdv_a < ep_a
+  [set sdv_a sdv_a + 1]
+
+  if sdv_b < ep_b
+  [set sdv_b sdv_b + 1]
 
   let sa sdv_a / 2
   let sb sdv_b / 2
@@ -123,7 +131,7 @@ to go
   ;; now move the turtles
   ask turtles
     [ wander
-      if any? neighbors with [pcolor = green]
+      if any? neighbors with [pcolor = green or pcolor = blue]
         [ set pcolor green
           ;; increase radius if appropriate
           ;;if distancexy 0 0 > radius
@@ -149,7 +157,7 @@ to make-new-turtle
     [ set color red
       set size 3  ;; easier to see
       setxy 0 0
-      let target-patch min-one-of (patches in-radius 50 with [pcolor = green and pxcor = 0]) [distance myself]
+
       ;;ifelse radius > 20
       ;;[      set heading one-of [0 36 72 108 144 180 216 252 288 324]]
       ;;[      set heading one-of [20 56 92 128 164 200 236 272 308 344]]
@@ -162,9 +170,12 @@ to make-new-turtle
       ifelse use-whole-world?
         [ jump max-pxcor ]
         [ jump rad ]
-      ;;face patch 0 0]
-      ;;rt 180 ]
-      face min-one-of patches with [pcolor = green] [distance myself]]
+      let target-patch min-one-of (patches with [pcolor = blue and pxcor = 0]) [distance myself]
+      ifelse point-at-raphe?
+      ;;[face min-one-of patches with [pcolor = green] [distance myself]]
+      [face target-patch]
+      [rt 180]
+  ]
 end
 
 to wander   ;; turtle procedure
@@ -228,7 +239,7 @@ max-particles
 max-particles
 0
 300
-250.0
+272.0
 1
 1
 NIL
@@ -254,7 +265,7 @@ wiggle-angle
 wiggle-angle
 0
 360
-8.0
+12.0
 1
 1
 NIL
@@ -320,7 +331,7 @@ raphe_len
 raphe_len
 0
 100
-1.0
+34.0
 1
 1
 NIL
@@ -335,7 +346,7 @@ ep_a
 ep_a
 0
 150
-100.0
+92.0
 1
 1
 NIL
@@ -350,7 +361,22 @@ ep_b
 ep_b
 0
 150
-100.0
+45.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+26
+262
+198
+295
+sdv_raphe_offset
+sdv_raphe_offset
+0
+100
+2.0
 1
 1
 NIL
@@ -358,33 +384,59 @@ HORIZONTAL
 
 SLIDER
 253
-247
+333
 425
-280
-sdv_raphe_offset
-sdv_raphe_offset
+366
+num_stv
+num_stv
 0
-100
-11.0
+360
+20.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-257
-296
-429
-329
-num_stv
-num_stv
+252
+245
+424
+278
+sdv0_a
+sdv0_a
 0
-360
-34.0
+100
+54.0
 1
 1
 NIL
 HORIZONTAL
+
+SLIDER
+253
+288
+425
+321
+sdv0_b
+sdv0_b
+0
+100
+31.0
+1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+25
+304
+167
+337
+point-at-raphe?
+point-at-raphe?
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
