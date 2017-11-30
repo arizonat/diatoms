@@ -96,10 +96,10 @@ to grow-sdv
   [stop]
 
   if sdv_a < ep_a
-  [set sdv_a sdv_a + 1]
+  [set sdv_a sdv_a + sdv_grow_rate]
 
   if sdv_b < ep_b
-  [set sdv_b sdv_b + 1]
+  [set sdv_b sdv_b + sdv_grow_rate]
 
   let sa sdv_a / 2
   let sb sdv_b / 2
@@ -143,7 +143,7 @@ to go
       ]
       ;; kill turtles that wander too far away from the center
       ;;if not use-whole-world? and distancexy 0 0 > radius + 3
-      if not use-whole-world? and not in-ellipse? (ep_a / 2 + 2) (ep_b / 2 + 2) xcor ycor
+      if not use-whole-world? and not in-ellipse? (sdv_a / 2 + 2) (sdv_b / 2 + 2) xcor ycor
         [ die ] ]
 
   ;; advance clock
@@ -204,10 +204,10 @@ end
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-608
-35
-917
-345
+416
+44
+725
+354
 -1
 -1
 1.5
@@ -239,7 +239,7 @@ max-particles
 max-particles
 0
 300
-272.0
+280.0
 1
 1
 NIL
@@ -265,7 +265,7 @@ wiggle-angle
 wiggle-angle
 0
 360
-12.0
+8.0
 1
 1
 NIL
@@ -289,10 +289,10 @@ NIL
 1
 
 BUTTON
-130
-44
-193
-77
+108
+42
+171
+75
 NIL
 go
 T
@@ -306,10 +306,10 @@ NIL
 0
 
 BUTTON
-233
-43
-296
-76
+191
+42
+254
+75
 NIL
 save
 NIL
@@ -323,45 +323,45 @@ NIL
 1
 
 SLIDER
-251
-119
-423
-152
+221
+104
+393
+137
 raphe_len
 raphe_len
 0
 100
-34.0
+70.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-252
-161
-424
-194
+222
+146
+394
+179
 ep_a
 ep_a
 0
 150
-92.0
+130.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-252
-203
-424
-236
+222
+188
+394
+221
 ep_b
 ep_b
 0
 150
-45.0
+50.0
 1
 1
 NIL
@@ -383,10 +383,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-253
-333
-425
-366
+223
+318
+395
+351
 num_stv
 num_stv
 0
@@ -398,30 +398,30 @@ NIL
 HORIZONTAL
 
 SLIDER
-252
-245
-424
-278
+222
+230
+394
+263
 sdv0_a
 sdv0_a
 0
 100
-54.0
+70.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-253
-288
-425
-321
+223
+273
+395
+306
 sdv0_b
 sdv0_b
 0
 100
-31.0
+15.0
 1
 1
 NIL
@@ -437,6 +437,21 @@ point-at-raphe?
 0
 1
 -1000
+
+SLIDER
+224
+362
+396
+395
+sdv_grow_rate
+sdv_grow_rate
+0
+50
+1.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
