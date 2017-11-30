@@ -24,8 +24,6 @@ to setup-sdv
   set sdv_a sdv0_a
   set sdv_b sdv0_b
 
-
-
   let sa sdv_a / 2
   let sb sdv_b / 2
 
@@ -87,6 +85,21 @@ to setup-stv
   repeat 360 [
     set all_angs lput i all_angs
     set i i + 1
+  ]
+end
+
+to bump-stvs
+  let ang_inc (360 / num_stv) / 2
+
+  set stv_ang map [ x -> (x + ang_inc) mod 360 ] stv_ang
+end
+
+to add-stvs
+  ;;let ang_inc (360 / num_stv) / 2
+  let ang_inc 5
+
+  foreach stv_ang[ang ->
+    set stv_ang lput ((ang + ang_inc) mod 360) stv_ang
   ]
 end
 
@@ -172,8 +185,9 @@ to make-new-turtle
         [ jump rad ]
       let target-patch min-one-of (patches with [pcolor = blue and pxcor = 0]) [distance myself]
       ifelse point-at-raphe?
-      ;;[face min-one-of patches with [pcolor = green] [distance myself]]
-      [face target-patch]
+      [face target-patch
+       set heading (heading + angle_towards_center * (towards patch 0 0 - heading))
+      ]
       [rt 180]
   ]
 end
@@ -204,10 +218,10 @@ end
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-416
-44
-725
-354
+485
+46
+794
+356
 -1
 -1
 1.5
@@ -265,7 +279,7 @@ wiggle-angle
 wiggle-angle
 0
 360
-8.0
+14.0
 1
 1
 NIL
@@ -331,7 +345,7 @@ raphe_len
 raphe_len
 0
 100
-70.0
+43.0
 1
 1
 NIL
@@ -346,7 +360,7 @@ ep_a
 ep_a
 0
 150
-130.0
+133.0
 1
 1
 NIL
@@ -361,7 +375,7 @@ ep_b
 ep_b
 0
 150
-50.0
+46.0
 1
 1
 NIL
@@ -391,7 +405,7 @@ num_stv
 num_stv
 0
 360
-20.0
+23.0
 1
 1
 NIL
@@ -406,7 +420,7 @@ sdv0_a
 sdv0_a
 0
 100
-70.0
+47.0
 1
 1
 NIL
@@ -421,7 +435,7 @@ sdv0_b
 sdv0_b
 0
 100
-15.0
+13.0
 1
 1
 NIL
@@ -449,6 +463,55 @@ sdv_grow_rate
 50
 1.0
 1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+271
+43
+360
+76
+NIL
+bump-stvs
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+375
+43
+455
+76
+NIL
+add-stvs
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+28
+351
+205
+384
+angle_towards_center
+angle_towards_center
+-1.0
+1.0
+0.0
+.1
 1
 NIL
 HORIZONTAL
