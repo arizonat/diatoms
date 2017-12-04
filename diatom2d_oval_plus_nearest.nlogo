@@ -5,12 +5,31 @@ globals [
   sdv_b
   stv_ang
   all_angs
+  ep_type ;; 0 ellipse, 1 diamond
 ]
 
 to setup
   clear-all
   setup-stv
   setup-epitheca
+  setup-sdv
+  setup-raphe
+  reset-ticks
+end
+
+to setup-diamond
+  clear-all
+  setup-stv
+  setup-epitheca-diamond
+  setup-sdv
+  setup-raphe
+  reset-ticks
+end
+
+to setup-triangle
+  clear-all
+  setup-stv
+  setup-epitheca-triangle
   setup-sdv
   setup-raphe
   reset-ticks
@@ -24,12 +43,9 @@ to setup-sdv
   set sdv_a sdv0_a
   set sdv_b sdv0_b
 
-  let sa sdv_a / 2
-  let sb sdv_b / 2
-
   foreach stv_ang [ang ->
     ;;let rad (sa * sb) / sqrt ((sa * cos ang) ^ 2 + (sb * sin ang) ^ 2)
-    let rad ellipse-rad sa sb ang
+    let rad ellipse-rad sdv_a sdv_b ang
     let ep_x rad * cos(ang)
     let ep_y rad * sin(ang)
     ask patch ep_x ep_y [set pcolor magenta]
@@ -38,16 +54,46 @@ end
 
 to setup-epitheca
   ;; set via slider
-  let ea ep_a / 2
-  let eb ep_b / 2
+  set ep_type 0
 
   foreach all_angs [ang ->
     ;;let rad (ea * eb) / sqrt ((ea * cos ang) ^ 2 + (eb * sin ang) ^ 2)
-    let rad ellipse-rad ea eb ang
+    let rad ellipse-rad ep_a ep_b ang
     let ep_x rad * cos(ang)
     let ep_y rad * sin(ang)
     ask patch ep_x ep_y [set pcolor yellow]
   ]
+end
+
+to setup-epitheca-diamond
+  set ep_type 1
+  foreach all_angs [ang ->
+    let rad diamond-rad ep_a ang
+    let ep_x rad * cos(ang)
+    let ep_y rad * sin(ang)
+    ask patch ep_x ep_y [set pcolor yellow]
+  ]
+end
+
+to setup-epitheca-triangle
+  set ep_type 2
+  foreach all_angs [ang ->
+    let rad tri-rad ep_a ang
+    let ep_x rad * cos(ang)
+    let ep_y rad * sin(ang)
+    ask patch ep_x ep_y [set pcolor yellow]
+  ]
+end
+
+to-report tri-rad [a ang]
+  ;; from https://math.stackexchange.com/questions/123548/explain-triangle-perimeter-in-polar-coordinates
+  set ang (ang * pi / 180)
+  let tp (2 * pi)
+  report a / cos((2 * pi / 3 * (3 * ang / (2 * pi) - floor(3 * ang / (2 * pi))) - pi / 3) * 180 / pi)
+end
+
+to-report diamond-rad [a ang]
+  report a / (abs(sin ang) + abs(cos ang))
 end
 
 to-report ellipse-rad [a b ang]
@@ -62,8 +108,68 @@ to-report in-ellipse? [a b x y]
   report (ellipse-rad a b ang) > rad
 end
 
+to-report in-diamond? [a x y]
+  let rad sqrt (x ^ 2 + y ^ 2)
+  let ang atan y x
+  report (diamond-rad a ang) > rad
+end
+
+to-report in-triangle? [a x y]
+  let rad sqrt (x ^ 2 + y ^ 2)
+  let ang atan y x
+  report (tri-rad a ang) > rad
+end
+
+to-report ep-rad [a b ang]
+  if ep_type = 0
+  [report ellipse-rad a b ang]
+
+  if ep_type = 1
+  [report diamond-rad a ang]
+
+  if ep_type = 2
+  [report tri-rad a ang]
+end
+
+to-report in-ep? [a b x y]
+  if ep_type = 0
+  [report in-ellipse? a b x y]
+
+  if ep_type = 1
+  [report in-diamond? a x y]
+
+  if ep_type = 2
+  [report in-triangle? a x y]
+end
+
+to setup-raphe-circle
+  ask patches with [pcolor = blue]
+  [set pcolor black]
+
+  ask patches with [distancexy 0 0 < raphe_len]
+  [set pcolor blue]
+end
+
+to setup-raphe-tristar
+  ask patches with [pcolor = blue]
+  [set pcolor black]
+
+  ask patches with [pycor = 0 and pxcor > 0 and pxcor < raphe_len]
+  [set pcolor blue]
+
+  let r 0
+  repeat raphe_len
+  [
+    ask patch 0 0[
+    ask patch-at-heading-and-distance -30 r [set pcolor blue]
+    ask patch-at-heading-and-distance -150 r [set pcolor blue]
+    ]
+    set r r + 1
+  ]
+end
+
 to setup-raphe
-  let len raphe_len / 2
+  let len raphe_len
   ask patches with [pxcor = 0 and pycor > -1 * len and pycor < len]
   [ set pcolor blue]
 end
@@ -98,31 +204,45 @@ to add-stvs
   ;;let ang_inc (360 / num_stv) / 2
   let ang_inc 5
 
+  set stv_ang map [ x -> (x - ang_inc) mod 360 ] stv_ang
+
   foreach stv_ang[ang ->
-    set stv_ang lput ((ang + ang_inc) mod 360) stv_ang
+    set stv_ang lput ((ang + 2 * ang_inc) mod 360) stv_ang
   ]
+  set num_stv 2 * num_stv
 end
 
 to grow-sdv
 
-  if sdv_a = ep_a and sdv_b = ep_b
-  [stop]
+  ;;if sdv_a = ep_a and sdv_b = ep_b
+  ;;[stop]
 
-  if sdv_a < ep_a
-  [set sdv_a sdv_a + sdv_grow_rate]
+  ;;if sdv_a < ep_a
+  ;;[set sdv_a sdv_a + sdv_grow_rate]
 
-  if sdv_b < ep_b
-  [set sdv_b sdv_b + sdv_grow_rate]
+  ;;if sdv_b < ep_b
+  ;;[set sdv_b sdv_b + sdv_grow_rate]
 
-  let sa sdv_a / 2
-  let sb sdv_b / 2
+  ;;if not in-ep? ep_a ep_b 0 sdv_a and not in-ep? ep_a ep_b sdv_b 0
+  ;;[stop]
+
+  ;;if in-ep? ep_a ep_b 0 sdv_a
+  ;;[set sdv_a sdv_a + sdv_grow_rate]
+
+  ;;if in-ep? ep_a ep_b sdv_b 0
+  ;;[set sdv_b sdv_b + sdv_grow_rate]
+
+  let containment map [ang -> (ep-rad ep_a ep_b ang) > (ellipse-rad sdv_a sdv_b ang)] stv_ang
+  if member? true containment
+  [set sdv_a sdv_a + sdv_grow_rate
+  set sdv_b sdv_b + sdv_grow_rate]
 
   ask patches with [pcolor = magenta]
   [set pcolor black]
 
   foreach stv_ang [ang ->
     ;;let rad (sa * sb) / sqrt ((sa * cos ang) ^ 2 + (sb * sin ang) ^ 2)
-    let rad ellipse-rad sa sb ang
+    let rad ellipse-rad sdv_a sdv_b ang
     let ep_x rad * cos(ang)
     let ep_y rad * sin(ang)
     ask patch ep_x ep_y [set pcolor magenta]
@@ -150,13 +270,13 @@ to go
           ;;if distancexy 0 0 > radius
           ;;  [ set radius distancexy 0 0 ]
           ;;die ]
-          if not in-ellipse? (sdv_a / 2 - 1) (sdv_b / 2 - 1) xcor ycor
+          if not in-ellipse? (sdv_a - 1) (sdv_b - 1) xcor ycor
           [grow-sdv]
          die
       ]
       ;; kill turtles that wander too far away from the center
       ;;if not use-whole-world? and distancexy 0 0 > radius + 3
-      if not use-whole-world? and not in-ellipse? (sdv_a / 2 + 2) (sdv_b / 2 + 2) xcor ycor
+      if not use-whole-world? and not in-ep? (sdv_a + 2) (sdv_b + 2) xcor ycor
         [ die ] ]
 
   ;; advance clock
@@ -178,11 +298,14 @@ to make-new-turtle
       let ang one-of stv_ang
       set heading (ang) + 90
       ;; set heading one-of [22.5 45 67.5 90 112.5 135 157.5 180 202.5 225 247.5 270 292.5 315 337.5 360]
-      let rad ellipse-rad (sdv_a / 2) (sdv_b / 2) ang
+      let rad ellipse-rad sdv_a sdv_b ang
+      let ep_rad ep-rad ep_a ep_b ang
+      set rad min list ep_rad rad
 
       ifelse use-whole-world?
         [ jump max-pxcor ]
         [ jump rad ]
+
       let target-patch min-one-of (patches with [pcolor = blue and pxcor = 0]) [distance myself]
       ifelse point-at-raphe?
       [face target-patch
@@ -245,10 +368,10 @@ ticks
 30.0
 
 SLIDER
-26
-151
-198
-184
+27
+212
+199
+245
 max-particles
 max-particles
 0
@@ -260,10 +383,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-28
-217
-180
-250
+29
+278
+181
+311
 use-whole-world?
 use-whole-world?
 1
@@ -271,15 +394,15 @@ use-whole-world?
 -1000
 
 SLIDER
-27
-104
-199
-137
+28
+165
+200
+198
 wiggle-angle
 wiggle-angle
 0
 360
-14.0
+2.0
 1
 1
 NIL
@@ -337,55 +460,55 @@ NIL
 1
 
 SLIDER
-221
-104
-393
-137
+212
+166
+384
+199
 raphe_len
 raphe_len
 0
 100
-43.0
+40.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-222
-146
-394
-179
+213
+208
+385
+241
 ep_a
 ep_a
 0
 150
-133.0
+41.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-222
-188
-394
-221
+213
+250
+385
+283
 ep_b
 ep_b
 0
 150
-46.0
+84.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-26
-262
-198
-295
+27
+323
+199
+356
 sdv_raphe_offset
 sdv_raphe_offset
 0
@@ -397,55 +520,55 @@ NIL
 HORIZONTAL
 
 SLIDER
-223
-318
-395
-351
+214
+380
+386
+413
 num_stv
 num_stv
 0
 360
-23.0
+25.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-222
-230
-394
-263
+213
+292
+385
+325
 sdv0_a
 sdv0_a
 0
 100
-47.0
+41.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-223
-273
-395
-306
+214
+335
+386
+368
 sdv0_b
 sdv0_b
 0
 100
-13.0
+41.0
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-25
-304
-167
-337
+26
+365
+168
+398
 point-at-raphe?
 point-at-raphe?
 0
@@ -453,10 +576,10 @@ point-at-raphe?
 -1000
 
 SLIDER
-224
-362
-396
-395
+215
+424
+387
+457
 sdv_grow_rate
 sdv_grow_rate
 0
@@ -502,10 +625,10 @@ NIL
 1
 
 SLIDER
-28
-351
-205
-384
+29
+412
+206
+445
 angle_towards_center
 angle_towards_center
 -1.0
@@ -515,6 +638,74 @@ angle_towards_center
 1
 NIL
 HORIZONTAL
+
+BUTTON
+27
+88
+140
+121
+NIL
+setup-diamond
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+28
+126
+137
+159
+NIL
+setup-triangle
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+160
+86
+292
+119
+NIL
+setup-raphe-circle
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+160
+125
+298
+158
+NIL
+setup-raphe-tristar
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
