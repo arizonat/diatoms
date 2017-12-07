@@ -257,9 +257,17 @@ to go
   ;; slider; also check clock so we don't make too many turtles too
   ;; soon, otherwise we get a big green clump at the center (only happens
   ;; USE-WHOLE-WORLD? is false)
-  while [count turtles < max-particles and
-         count turtles < ticks]
-    [ make-new-turtle ]
+
+  ;;while [count turtles < max-particles and
+  ;;       count turtles < ticks]
+  ;;  [ make-new-turtle ]
+
+  foreach stv_ang [ang ->
+    if random-float 1 < stv-chance-to-release
+    [
+      make-new-turtle-at ang
+    ]
+  ]
 
   ;; now move the turtles
   ask turtles
@@ -281,6 +289,31 @@ to go
 
   ;; advance clock
   tick
+end
+
+to make-new-turtle-at [ang]
+    create-turtles 1
+    [ set color red
+      set size 3  ;; easier to see
+      setxy 0 0
+
+      set heading (ang) + 90
+      ;; set heading one-of [22.5 45 67.5 90 112.5 135 157.5 180 202.5 225 247.5 270 292.5 315 337.5 360]
+      let rad ellipse-rad sdv_a sdv_b ang
+      let ep_rad ep-rad ep_a ep_b ang
+      set rad min list ep_rad rad
+
+      ifelse use-whole-world?
+        [ jump max-pxcor ]
+        [ jump rad ]
+
+      let target-patch min-one-of (patches with [pcolor = blue and pxcor = 0]) [distance myself]
+      ifelse point-at-raphe?
+      [face target-patch
+       set heading (heading + angle_towards_center * (towards patch 0 0 - heading))
+      ]
+      [rt 180]
+  ]
 end
 
 to make-new-turtle
@@ -368,25 +401,25 @@ ticks
 30.0
 
 SLIDER
-27
-212
-199
-245
+920
+47
+1092
+80
 max-particles
 max-particles
 0
 300
-280.0
+48.0
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-29
-278
-181
-311
+24
+320
+176
+353
 use-whole-world?
 use-whole-world?
 1
@@ -402,7 +435,7 @@ wiggle-angle
 wiggle-angle
 0
 360
-2.0
+8.0
 1
 1
 NIL
@@ -468,7 +501,7 @@ raphe_len
 raphe_len
 0
 100
-40.0
+1.0
 1
 1
 NIL
@@ -483,7 +516,7 @@ ep_a
 ep_a
 0
 150
-41.0
+50.0
 1
 1
 NIL
@@ -498,17 +531,17 @@ ep_b
 ep_b
 0
 150
-84.0
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-27
-323
-199
-356
+921
+86
+1093
+119
 sdv_raphe_offset
 sdv_raphe_offset
 0
@@ -528,7 +561,7 @@ num_stv
 num_stv
 0
 360
-25.0
+24.0
 1
 1
 NIL
@@ -543,7 +576,7 @@ sdv0_a
 sdv0_a
 0
 100
-41.0
+5.0
 1
 1
 NIL
@@ -558,7 +591,7 @@ sdv0_b
 sdv0_b
 0
 100
-41.0
+5.0
 1
 1
 NIL
@@ -625,10 +658,10 @@ NIL
 1
 
 SLIDER
-29
-412
-206
-445
+28
+404
+205
+437
 angle_towards_center
 angle_towards_center
 -1.0
@@ -706,6 +739,31 @@ NIL
 NIL
 NIL
 1
+
+TEXTBOX
+919
+26
+1069
+44
+These are no longer used
+11
+0.0
+1
+
+SLIDER
+31
+217
+208
+250
+stv-chance-to-release
+stv-chance-to-release
+0
+1
+0.85
+0.05
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
